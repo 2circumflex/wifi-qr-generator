@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export function WifiQrCodeGenerator() {
-  const [brandName, setBrandName] = useState('ODD')
+  const [brandName, setBrandName] = useState('스타벅스 로이점')
   const [networkName, setNetworkName] = useState('')
   const [password, setPassword] = useState('')
   const [encryptionType, setEncryptionType] = useState('WPA')
