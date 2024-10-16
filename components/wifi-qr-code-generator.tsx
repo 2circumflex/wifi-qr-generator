@@ -2,31 +2,55 @@
 
 import { useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import * as z from "zod"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Wifi } from 'lucide-react'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+
+const formSchema = z.object({
+  brandName: z.string().min(1, "브랜드 이름은 필수입니다."),
+  networkName: z.string().min(1, "네트워크 이름은 필수입니다."),
+  password: z.string().min(1, "비밀번호는 필수입니다."),
+  encryptionType: z.enum(["WPA", "WEP", "nopass"]),
+  backgroundColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "유효한 색상 코드를 입력하세요."),
+})
 
 export function WifiQrCodeGenerator() {
-  const [brandName, setBrandName] = useState('')
-  const [networkName, setNetworkName] = useState('')
-  const [password, setPassword] = useState('')
-  const [encryptionType, setEncryptionType] = useState('WPA')
-  const [backgroundColor, setBackgroundColor] = useState('#000000')
+  const [wifiString, setWifiString] = useState('')
 
-  const generateWifiString = () => {
-    if (!networkName || !password) return '';
-    return `WIFI:T:${encryptionType};S:${networkName};P:${password};;`
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      brandName: "",
+      networkName: "",
+      password: "",
+      encryptionType: "WPA",
+      backgroundColor: "#000000",
+    },
+  })
+
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    const { brandName, networkName, password, encryptionType } = values
+    console.log(brandName);
+    setWifiString(`WIFI:T:${encryptionType};S:${networkName};P:${password};;`)
   }
-
-  const wifiString = generateWifiString()
 
   return (
     <div className="w-full max-w-md mx-auto p-6">
       <h2 className="text-2xl font-bold text-center mb-6">WIFI QRCODE</h2>
       <div className="space-y-8">
-        <div className="p-4 rounded-lg w-64 mx-auto" style={{ backgroundColor }}>
+        <div className="p-4 rounded-lg w-64 mx-auto relative" style={{ backgroundColor: form.watch("backgroundColor") }}>
           <div className="text-center mb-2 text-white text-lg font-bold">WIFI 접속</div>
           <div className="w-48 h-48 mx-auto bg-white flex items-center justify-center">
             {wifiString ? (
@@ -47,61 +71,94 @@ export function WifiQrCodeGenerator() {
               </div>
             )}
           </div>
-          <div className="text-center mt-2 text-white text-lg font-bold">{brandName}</div>
-        </div>
-        <div className="space-y-4">
-          <div>
-            <Label htmlFor="brandName">브랜드 이름</Label>
-            <Input
-              id="brandName"
-              value={brandName}
-              onChange={(e) => setBrandName(e.target.value)}
-            />
+          <div className="text-center mt-2 text-white text-lg font-bold h-7">
+            {form.watch("brandName") || "\u00A0"}
           </div>
-          <div>
-            <Label htmlFor="networkName">네트워크 이름(SSID)</Label>
-            <Input
-              id="networkName"
-              value={networkName}
-              onChange={(e) => setNetworkName(e.target.value)}
-              placeholder="네트워크 이름 입력"
-            />
-          </div>
-          <div>
-            <Label htmlFor="password">비밀번호</Label>
-            <Input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="비밀번호 입력"
-            />
-          </div>
-          <div>
-            <Label htmlFor="encryptionType">암호화 유형</Label>
-            <Select value={encryptionType} onValueChange={setEncryptionType}>
-              <SelectTrigger id="encryptionType">
-                <SelectValue placeholder="암호화 유형 선택" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="WPA">WPA/WPA2</SelectItem>
-                <SelectItem value="WEP">WEP</SelectItem>
-                <SelectItem value="nopass">암호 없음</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Label htmlFor="backgroundColor">컨테이너 배경색</Label>
-            <Input
-              id="backgroundColor"
-              type="color"
-              value={backgroundColor}
-              onChange={(e) => setBackgroundColor(e.target.value)}
-              className="w-8 h-8 p-0 border-0"
-            />
+          <div className="absolute bottom-1 right-2 text-white text-xs">
+            by roy
           </div>
         </div>
-        <Button className="w-full">생성하기</Button>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
+            <FormField
+              control={form.control}
+              name="brandName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className='font-bold text-zinc-900'>브랜드 이름</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="브랜드 이름 입력" />
+                  </FormControl>
+                  <FormMessage className='text-xs' />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="networkName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className='font-bold text-zinc-900'>네트워크 이름(SSID)</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="네트워크 이름 입력" />
+                  </FormControl>
+                  <FormMessage className='text-xs' />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className='font-bold text-zinc-900'>비밀번호</FormLabel>
+                  <FormControl>
+                    <Input {...field} type="password" placeholder="비밀번호 입력" />
+                  </FormControl>
+                  <FormMessage className='text-xs' />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="encryptionType"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className='font-bold text-zinc-900'>암호화 유형</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="암호화 유형 선택" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="WPA">WPA/WPA2</SelectItem>
+                      <SelectItem value="WEP">WEP</SelectItem>
+                      <SelectItem value="nopass">암호 없음</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="backgroundColor"
+              render={({ field }) => (
+                <FormItem className="flex items-center space-x-2">
+                  <FormLabel>컨테이너 배경색</FormLabel>
+                  <FormControl>
+                    <Input
+                      {...field}
+                      type="color"
+                      className="w-8 h-8 p-0 border-0"
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="w-full">생성하기</Button>
+          </form>
+        </Form>
       </div>
     </div>
   )
