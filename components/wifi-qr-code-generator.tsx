@@ -6,35 +6,48 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Wifi } from 'lucide-react'
 
 export function WifiQrCodeGenerator() {
-  const [brandName, setBrandName] = useState('스타벅스 로이점')
+  const [brandName, setBrandName] = useState('')
   const [networkName, setNetworkName] = useState('')
   const [password, setPassword] = useState('')
   const [encryptionType, setEncryptionType] = useState('WPA')
-  const [backgroundColor, setBackgroundColor] = useState('#ffffff')
+  const [backgroundColor, setBackgroundColor] = useState('#000000')
 
   const generateWifiString = () => {
+    if (!networkName || !password) return '';
     return `WIFI:T:${encryptionType};S:${networkName};P:${password};;`
   }
+
+  const wifiString = generateWifiString()
 
   return (
     <div className="w-full max-w-md mx-auto p-6">
       <h2 className="text-2xl font-bold text-center mb-6">WIFI QRCODE</h2>
       <div className="space-y-8">
-        <div className="p-4 rounded-lg" style={{ backgroundColor: backgroundColor }}>
-          <div className="text-center mb-2">WIFI 접속</div>
+        <div className="p-4 rounded-lg w-64 mx-auto" style={{ backgroundColor }}>
+          <div className="text-center mb-2 text-white text-lg font-bold">WIFI 접속</div>
           <div className="w-48 h-48 mx-auto bg-white flex items-center justify-center">
-            <QRCodeSVG
-              value={generateWifiString()}
-              size={192}
-              bgColor="#ffffff"
-              fgColor="#000000"
-              level="L"
-              includeMargin={false}
-            />
+            {wifiString ? (
+              <QRCodeSVG
+                value={wifiString}
+                size={192}
+                bgColor="#ffffff"
+                fgColor="#000000"
+                level="L"
+                includeMargin={false}
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center w-full h-full text-gray-400">
+                <Wifi className="w-12 h-12 mb-2" />
+                <p className="text-sm text-center">
+                  QR 코드를 생성하려면<br />네트워크 정보를 입력하세요
+                </p>
+              </div>
+            )}
           </div>
-          <div className="text-center mt-2">{brandName}</div>
+          <div className="text-center mt-2 text-white text-lg font-bold">{brandName}</div>
         </div>
         <div className="space-y-4">
           <div>
