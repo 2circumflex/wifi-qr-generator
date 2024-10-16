@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
@@ -17,6 +17,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import html2canvas from 'html2canvas'
 
 const formSchema = z.object({
   brandName: z.string().min(1, "브랜드 이름은 필수입니다."),
@@ -28,6 +29,7 @@ const formSchema = z.object({
 
 export function WifiQrCodeGenerator() {
   const [wifiString, setWifiString] = useState('')
+  const cardRef = useRef<HTMLDivElement>(null)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -46,11 +48,22 @@ export function WifiQrCodeGenerator() {
     setWifiString(`WIFI:T:${encryptionType};S:${networkName};P:${password};;`)
   }
 
+  function handleDownload() {
+    if (cardRef.current) {
+      html2canvas(cardRef.current).then((canvas) => {
+        const link = document.createElement('a')
+        link.download = 'wifi-qr-code.png'
+        link.href = canvas.toDataURL()
+        link.click()
+      })
+    }
+  }
+
   return (
     <div className="w-full max-w-md mx-auto p-6">
       <h2 className="text-2xl font-bold text-center mb-6">WIFI QRCODE</h2>
       <div className="space-y-8">
-        <div className="p-4 rounded-lg w-64 mx-auto relative" style={{ backgroundColor: form.watch("backgroundColor") }}>
+        <div ref={cardRef} className="p-4 rounded-lg w-64 mx-auto relative" style={{ backgroundColor: form.watch("backgroundColor") }}>
           <div className="text-center mb-2 text-white text-lg font-bold">WIFI 접속</div>
           <div className="w-48 h-48 mx-auto bg-white flex items-center justify-center">
             {wifiString ? (
@@ -78,6 +91,13 @@ export function WifiQrCodeGenerator() {
             by roy
           </div>
         </div>
+        <Button 
+          onClick={handleDownload} 
+          className="w-full mb-4"
+          disabled={!wifiString}
+        >
+          QR 코드 다운로드
+        </Button>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             <FormField
